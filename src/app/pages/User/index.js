@@ -64,6 +64,11 @@ export default class User extends Component {
         this.setState({page: 1, refreshing: false});
     };
 
+    handleNavigateStarredView = starred => {
+        const {navigation} = this.props;
+        navigation.navigate('StarredView', {starred});
+    };
+
     renderFooter = () => {
         const {loadingMore} = this.state;
         if (!loadingMore) {
@@ -98,7 +103,10 @@ export default class User extends Component {
                     keyExtractor={star => String(star.id)}
                     ListFooterComponent={this.renderFooter}
                     renderItem={({item}) => (
-                        <Strarred>
+                        <Strarred
+                            onPress={() =>
+                                this.handleNavigateStarredView(item)
+                            }>
                             <OwnerAvatar
                                 source={{uri: item.owner.avatar_url}}
                             />
