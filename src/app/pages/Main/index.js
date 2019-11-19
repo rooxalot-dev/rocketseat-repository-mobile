@@ -13,12 +13,22 @@ import {
     Avatar,
     Name,
     Bio,
+    RemoveAllButton,
     ProfileButton,
     ProfileButtonText,
 } from './styles';
 import api from '../../services/api';
 
 export default class Main extends Component {
+    static navigationOptions = ({navigation}) => ({
+        title: 'Usuários',
+        headerRight: () => (
+            <RemoveAllButton onPress={navigation.getParam('handleRemoveAll')}>
+                <Icon name="delete" size={24} color="#fff" />
+            </RemoveAllButton>
+        ),
+    });
+
     state = {
         newUser: '',
         users: [],
@@ -26,6 +36,10 @@ export default class Main extends Component {
     };
 
     async componentDidMount() {
+        this.props.navigation.setParams({
+            handleRemoveAll: this.handleRemoveAll,
+        });
+
         const users = await AsyncStorage.getItem('users');
         if (users) {
             this.setState({
@@ -46,6 +60,12 @@ export default class Main extends Component {
         const {users, newUser} = this.state;
         try {
             this.setState({loading: true});
+
+            const userExists = users.find(u => u.login === newUser);
+            if (userExists) {
+                throw new Error('Usuário já existe!');
+            }
+
             const response = await api.get(`/users/${newUser}`);
 
             const data = {
@@ -71,8 +91,8 @@ export default class Main extends Component {
         navigation.navigate('User', {user});
     };
 
-    static navigationOptions = {
-        title: 'Usuários',
+    handleRemoveAll = () => {
+        this.setState({users: []});
     };
 
     render() {

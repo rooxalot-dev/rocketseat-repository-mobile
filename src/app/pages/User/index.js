@@ -1,4 +1,5 @@
 import React, {Component} from 'react';
+import {ActivityIndicator} from 'react-native';
 
 import api from '../../services/api';
 import {
@@ -13,6 +14,7 @@ import {
     Info,
     Title,
     Author,
+    LoadingStarred,
 } from './styles';
 
 export default class User extends Component {
@@ -21,21 +23,63 @@ export default class User extends Component {
     });
 
     state = {
+        loading: true,
+        loadingMore: false,
+        refreshing: false,
+        page: 1,
         stars: [],
     };
 
     async componentDidMount() {
-        const {navigation} = this.props;
-        const user = navigation.getParam('user');
-        const response = await api.get(`/users/${user.login}/starred`);
-
-        this.setState({stars: response.data});
+        const {page} = this.state;
+        await this.getStarred(page);
     }
 
-    render() {
+    getStarred = async (page, refresh = false) => {
         const {stars} = this.state;
         const {navigation} = this.props;
         const user = navigation.getParam('user');
+        const response = await api.get(
+            `/users/${user.login}/starred?page=${page}`
+        );
+
+        this.setState({
+            stars: !refresh ? [...stars, ...response.data] : [...response.data],
+            loading: false,
+        });
+    };
+
+    handleLoadMore = async () => {
+        this.setState({loadingMore: true});
+        const {page} = this.state;
+        const newPage = page + 1;
+
+        await this.getStarred(newPage);
+        this.setState({page: newPage, loadingMore: false});
+    };
+
+    handleRefresh = async () => {
+        this.setState({refreshing: true});
+        await this.getStarred(1, true);
+        this.setState({page: 1, refreshing: false});
+    };
+
+    renderFooter = () => {
+        const {loadingMore} = this.state;
+        if (!loadingMore) {
+            return null;
+        }
+        return <LoadingStarred color="#7159c1" />;
+    };
+
+    render() {
+        const {stars, loading, refreshing} = this.state;
+        const {navigation} = this.props;
+        const user = navigation.getParam('user');
+
+        if (loading) {
+            return <LoadingStarred color="#7159c1" />;
+        }
 
         return (
             <Container>
@@ -46,8 +90,13 @@ export default class User extends Component {
                 </Header>
 
                 <Stars
+                    onEndReachedThreshold={0.2}
+                    onEndReached={this.handleLoadMore}
+                    onRefresh={this.handleRefresh}
+                    refreshing={refreshing}
                     data={stars}
                     keyExtractor={star => String(star.id)}
+                    ListFooterComponent={this.renderFooter}
                     renderItem={({item}) => (
                         <Strarred>
                             <OwnerAvatar

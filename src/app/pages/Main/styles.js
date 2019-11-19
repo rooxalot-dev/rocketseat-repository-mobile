@@ -1,5 +1,5 @@
 import styled from 'styled-components/native';
-import {RectButton} from 'react-native-gesture-handler';
+import {RectButton, TouchableOpacity} from 'react-native-gesture-handler';
 
 export const Container = styled.View`
     flex: 1;
@@ -67,6 +67,10 @@ export const Bio = styled.Text.attrs({
     line-height: 18px;
     color: #999;
     text-align: center;
+`;
+
+export const RemoveAllButton = styled(TouchableOpacity)`
+    margin-right: 28px;
 `;
 
 export const ProfileButton = styled(RectButton)`
